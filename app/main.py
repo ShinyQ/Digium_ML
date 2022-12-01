@@ -38,7 +38,7 @@ def api(data, code):
 
 @app.get('/', status_code=200)
 def status(response: Response):
-    return api("Digium Machine Learning API Works!", response.status_code)
+    return api("Digium ML API Works!", response.status_code)
 
 
 @app.post("/get_nearby_museum", status_code=200)
