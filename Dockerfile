@@ -9,3 +9,5 @@ RUN pip install --no-cache-dir --default-timeout=1000 --upgrade -r /code/require
 COPY ./app /code/app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
+
+EXPOSE 9000
