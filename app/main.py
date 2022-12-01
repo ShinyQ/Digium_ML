@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
 from typing import List
-from helper import api
 from io import StringIO
 
 import pandas as pd
@@ -22,9 +21,24 @@ class MuseumList(BaseModel):
 
 app = FastAPI(debug=True)
 
+def api(data, code):
+    message = "Success"
+
+    if not code:
+        code = 200
+    elif code == 500 or code == 400:
+        message = "Error"
+    elif code == 404:
+        message = "Not Found"
+    elif code == 405:
+        message = "Method Not Allowed"
+
+    return {'code': code, 'message': message, 'data': data}
+
+
 @app.get('/', status_code=200)
 def status(response: Response):
-    return api.builder("Digium ML API Works!", response.status_code)
+    return api("Digium ML API Works!", response.status_code)
 
 
 @app.post("/get_nearby_museum", status_code=200)
@@ -62,4 +76,4 @@ def get_prediction(list: MuseumList, response: Response):
             museum['distance'] = round(d[i]*r_km, 0)
             result.append(museum)
         
-    return api.builder(result, response.status_code)
+    return api(result, response.status_code)
