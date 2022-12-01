@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
 from typing import List
-from .helper import api
+from helper import api
 from io import StringIO
 
 import pandas as pd
@@ -13,11 +13,12 @@ import os
 
 class Museum(BaseModel):
     name: str
-    latitude: str
-    longitude: str
+    latitude: float
+    longitude: float
 
 class MuseumList(BaseModel):
-    data: List[Museum]
+    items: List[Museum]
+    others: Museum
 
 app = FastAPI(debug=True)
 
@@ -27,35 +28,38 @@ def status(response: Response):
 
 
 @app.post("/get_nearby_museum", status_code=200)
-def get_prediction(data: MuseumList, response: Response):
+def get_prediction(list: MuseumList, response: Response):
+    item_list = list.items       
+    museum_list = []
+
+    for data in item_list:
+        museum_list.append([data.name, data.latitude, data.longitude])
+
     result = []
 
-    data = """NAME Latitude Longitude
-B -7.879046689728909 112.51992647162353
-C -7.230805 112.7342
-D -7.8890 112.5285
-E -6.9014 -6.9014
-"""
-
-    df = pd.read_csv(StringIO(data), sep = ' ')
+    df = pd.DataFrame(museum_list, columns =['NAME', 'Latitude', 'Longitude'])
 
     tree = BallTree(np.deg2rad(df[['Latitude', 'Longitude']].values), metric='haversine')
 
-    # Setup distance queries (points for which we want to find nearest neighbors)
-    other_data = """NAME Latitude Longitude
-B_alt -6.4014 -6.9014
-"""
+    others = [[
+        list.others.name, 
+        list.others.latitude, 
+        list.others.longitude
+    ]]
 
-    df_other = pd.read_csv(StringIO(other_data), sep = ' ')
+    df_other =  pd.DataFrame(others, columns =['NAME', 'Latitude', 'Longitude'])
 
     query_lats = df_other['Latitude']
     query_lons = df_other['Longitude']
 
     distances, indices = tree.query(np.deg2rad(np.c_[query_lats, query_lons]), k = 3)
 
-    r_km = 6371 # multiplier to convert to km (from unit distance)
+    r_km = 6371
+
     for _, d, ind in zip(df_other['NAME'], distances, indices):
         for i, index in enumerate(ind):
-            result.append([df.iloc[index]['NAME'], d[i]*r_km])
+            museum = dict(item_list[index])
+            museum['distance'] = round(d[i]*r_km, 0)
+            result.append(museum)
         
     return api.builder(result, response.status_code)
