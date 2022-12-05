@@ -11,6 +11,7 @@ from sklearn.neighbors import BallTree
 import os
 
 class Museum(BaseModel):
+    id: int
     name: str
     latitude: float
     longitude: float
