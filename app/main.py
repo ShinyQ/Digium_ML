@@ -14,10 +14,15 @@ class Museum(BaseModel):
     name: str
     latitude: float
     longitude: float
+    background: str
+
+class User(BaseModel):
+    latitude: float
+    longitude: float
 
 class MuseumList(BaseModel):
     items: List[Museum]
-    others: Museum
+    others: User
 
 app = FastAPI(debug=True)
 
@@ -47,16 +52,16 @@ def get_prediction(list: MuseumList, response: Response):
     museum_list = []
 
     for data in item_list:
-        museum_list.append([data.name, data.latitude, data.longitude])
+        museum_list.append([data.name, data.latitude, data.longitude, data.background])
 
     result = []
 
-    df = pd.DataFrame(museum_list, columns =['NAME', 'Latitude', 'Longitude'])
+    df = pd.DataFrame(museum_list, columns =['NAME', 'Latitude', 'Longitude', 'Background'])
 
     tree = BallTree(np.deg2rad(df[['Latitude', 'Longitude']].values), metric='haversine')
 
     others = [[
-        list.others.name, 
+        'User', 
         list.others.latitude, 
         list.others.longitude
     ]]
