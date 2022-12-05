@@ -52,11 +52,11 @@ def get_prediction(list: MuseumList, response: Response):
     museum_list = []
 
     for data in item_list:
-        museum_list.append([data.name, data.latitude, data.longitude, data.background])
+        museum_list.append([data.id, data.name, data.latitude, data.longitude, data.background])
 
     result = []
 
-    df = pd.DataFrame(museum_list, columns =['NAME', 'Latitude', 'Longitude', 'Background'])
+    df = pd.DataFrame(museum_list, columns =['id', 'NAME', 'Latitude', 'Longitude', 'Background'])
 
     tree = BallTree(np.deg2rad(df[['Latitude', 'Longitude']].values), metric='haversine')
 
